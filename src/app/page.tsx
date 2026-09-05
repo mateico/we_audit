@@ -1,52 +1,184 @@
-import Image from "next/image";
+"use client";
+
+import { useState, type FormEvent } from "react";
+import type { NegocioBusqueda } from "@/lib/types";
+import { ejecutarConLimite } from "@/lib/concurrencia";
+import { Button } from "@/components/ui";
+import {
+  NegocioCard,
+  type EstadoAuditoria,
+  type EstadoGbp,
+} from "@/components/negocio-card";
+
+const CIUDADES = ["Punta del Este", "Montevideo"];
+const LIMITE_AUDITORIAS_PARALELAS = 3;
 
 export default function Home() {
-	return (
-		<div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-			<main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-				<Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
-				<ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-					<li className="mb-2 tracking-[-.01em]">
-						Get started by editing{" "}
-						<code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-							src/app/page.tsx
-						</code>
-						.
-					</li>
-					<li className="tracking-[-.01em]">Save and see your changes instantly.</li>
-				</ol>
+  const [rubro, setRubro] = useState("");
+  const [ciudad, setCiudad] = useState(CIUDADES[0]);
+  const [buscando, setBuscando] = useState(false);
+  const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null);
+  const [negocios, setNegocios] = useState<NegocioBusqueda[]>([]);
+  const [auditorias, setAuditorias] = useState<Record<string, EstadoAuditoria>>(
+    {},
+  );
+  const [gbp, setGbp] = useState<Record<string, EstadoGbp>>({});
 
-				<div className="flex gap-4 items-center flex-col sm:flex-row">
-					<a
-						className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-						href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Read our docs
-					</a>
-				</div>
-			</main>
-			<footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-					Learn
-				</a>
-				<a
-					className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-					href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					<Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-					Go to nextjs.org →
-				</a>
-			</footer>
-		</div>
-	);
+  async function auditarNegocio(negocio: NegocioBusqueda) {
+    setAuditorias((prev) => ({
+      ...prev,
+      [negocio.placeId]: { status: "cargando" },
+    }));
+    try {
+      const res = await fetch(
+        `/api/auditar?url=${encodeURIComponent(negocio.websiteUri!)}`,
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error auditando el sitio.");
+      setAuditorias((prev) => ({
+        ...prev,
+        [negocio.placeId]: { status: "listo", data },
+      }));
+    } catch (err) {
+      setAuditorias((prev) => ({
+        ...prev,
+        [negocio.placeId]: {
+          status: "error",
+          mensaje: err instanceof Error ? err.message : "Error desconocido",
+        },
+      }));
+    }
+  }
+
+  async function cargarGbp(negocio: NegocioBusqueda) {
+    setGbp((prev) => ({ ...prev, [negocio.placeId]: { status: "cargando" } }));
+    try {
+      const res = await fetch(
+        `/api/detalle-negocio?placeId=${encodeURIComponent(negocio.placeId)}`,
+      );
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error ?? "Error obteniendo el detalle de GBP.");
+      setGbp((prev) => ({
+        ...prev,
+        [negocio.placeId]: { status: "listo", data },
+      }));
+    } catch (err) {
+      setGbp((prev) => ({
+        ...prev,
+        [negocio.placeId]: {
+          status: "error",
+          mensaje: err instanceof Error ? err.message : "Error desconocido",
+        },
+      }));
+    }
+  }
+
+  async function handleBuscar(e: FormEvent) {
+    e.preventDefault();
+    if (!rubro.trim()) return;
+
+    setBuscando(true);
+    setErrorBusqueda(null);
+    setNegocios([]);
+    setAuditorias({});
+    setGbp({});
+
+    try {
+      const res = await fetch(
+        `/api/search-negocios?rubro=${encodeURIComponent(rubro)}&zona=${encodeURIComponent(ciudad)}`,
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error buscando negocios.");
+
+      const resultado = data.negocios as NegocioBusqueda[];
+      setNegocios(resultado);
+      setAuditorias(
+        Object.fromEntries(
+          resultado.map((n) => [
+            n.placeId,
+            n.websiteUri
+              ? { status: "cargando" as const }
+              : { status: "sin-web" as const },
+          ]),
+        ),
+      );
+
+      const conWeb = resultado.filter((n) => n.websiteUri);
+      ejecutarConLimite(conWeb, LIMITE_AUDITORIAS_PARALELAS, auditarNegocio);
+    } catch (err) {
+      setErrorBusqueda(
+        err instanceof Error ? err.message : "Error desconocido",
+      );
+    } finally {
+      setBuscando(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen">
+      <header className="border-b border-border bg-foreground px-6 py-4">
+        <h1 className="text-lg font-semibold text-background">we-audit</h1>
+      </header>
+
+      <main className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8">
+        <form
+          onSubmit={handleBuscar}
+          className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end"
+        >
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-sm font-medium text-foreground">Rubro</label>
+            <input
+              value={rubro}
+              onChange={(e) => setRubro(e.target.value)}
+              placeholder="ej. panadería"
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-foreground">
+              Ciudad
+            </label>
+            <select
+              value={ciudad}
+              onChange={(e) => setCiudad(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            >
+              {CIUDADES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button type="submit" disabled={buscando || !rubro.trim()}>
+            {buscando ? "Buscando…" : "Buscar negocios"}
+          </Button>
+        </form>
+
+        {errorBusqueda && (
+          <p className="text-sm text-red-600">{errorBusqueda}</p>
+        )}
+
+        {negocios.length > 0 && (
+          <p className="text-sm text-muted">
+            {negocios.length} negocios encontrados
+          </p>
+        )}
+
+        <div className="flex flex-col gap-4">
+          {negocios.map((negocio) => (
+            <NegocioCard
+              key={negocio.placeId}
+              negocio={negocio}
+              estado={auditorias[negocio.placeId] ?? { status: "sin-web" }}
+              estadoGbp={gbp[negocio.placeId] ?? { status: "idle" }}
+              onReintentarAuditoria={auditarNegocio}
+              onVerGbp={cargarGbp}
+            />
+          ))}
+        </div>
+      </main>
+    </div>
+  );
 }

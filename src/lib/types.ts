@@ -60,3 +60,12 @@ export interface ScoreDetalle {
   puntosMax: number;
   motivo: string;
 }
+
+export interface Bloque2Gbp {
+  placeId: string;
+  rating: number | null;
+  userRatingCount: number | null;
+  categoria: string | null;
+  tieneWebsite: boolean;
+  fotosCount: number;
+}
