@@ -1,0 +1,5 @@
+# Load .env.development* files when running `wrangler dev`
+NEXTJS_ENV=development
+
+# API key de Google Cloud, restringida a Places API (New) y PageSpeed Insights API.
+GOOGLE_API_KEY=
