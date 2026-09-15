@@ -2,15 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import type { NegocioBusqueda } from "@/lib/types";
+import { CIUDADES } from "@/lib/constantes";
 import { ejecutarConLimite } from "@/lib/concurrencia";
+import { useAuditorias } from "@/hooks/use-auditorias";
 import { Button } from "@/components/ui";
-import {
-  NegocioCard,
-  type EstadoAuditoria,
-  type EstadoGbp,
-} from "@/components/negocio-card";
+import { NegocioCard } from "@/components/negocio-card";
 
-const CIUDADES = ["Punta del Este", "Montevideo"];
 const LIMITE_AUDITORIAS_PARALELAS = 3;
 
 export default function Home() {
@@ -19,60 +16,8 @@ export default function Home() {
   const [buscando, setBuscando] = useState(false);
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null);
   const [negocios, setNegocios] = useState<NegocioBusqueda[]>([]);
-  const [auditorias, setAuditorias] = useState<Record<string, EstadoAuditoria>>(
-    {},
-  );
-  const [gbp, setGbp] = useState<Record<string, EstadoGbp>>({});
-
-  async function auditarNegocio(negocio: NegocioBusqueda) {
-    setAuditorias((prev) => ({
-      ...prev,
-      [negocio.placeId]: { status: "cargando" },
-    }));
-    try {
-      const res = await fetch(
-        `/api/auditar?url=${encodeURIComponent(negocio.websiteUri!)}`,
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error auditando el sitio.");
-      setAuditorias((prev) => ({
-        ...prev,
-        [negocio.placeId]: { status: "listo", data },
-      }));
-    } catch (err) {
-      setAuditorias((prev) => ({
-        ...prev,
-        [negocio.placeId]: {
-          status: "error",
-          mensaje: err instanceof Error ? err.message : "Error desconocido",
-        },
-      }));
-    }
-  }
-
-  async function cargarGbp(negocio: NegocioBusqueda) {
-    setGbp((prev) => ({ ...prev, [negocio.placeId]: { status: "cargando" } }));
-    try {
-      const res = await fetch(
-        `/api/detalle-negocio?placeId=${encodeURIComponent(negocio.placeId)}`,
-      );
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.error ?? "Error obteniendo el detalle de GBP.");
-      setGbp((prev) => ({
-        ...prev,
-        [negocio.placeId]: { status: "listo", data },
-      }));
-    } catch (err) {
-      setGbp((prev) => ({
-        ...prev,
-        [negocio.placeId]: {
-          status: "error",
-          mensaje: err instanceof Error ? err.message : "Error desconocido",
-        },
-      }));
-    }
-  }
+  const { auditorias, gbp, inicializarEstados, auditarNegocio, cargarGbp } =
+    useAuditorias();
 
   async function handleBuscar(e: FormEvent) {
     e.preventDefault();
@@ -81,8 +26,6 @@ export default function Home() {
     setBuscando(true);
     setErrorBusqueda(null);
     setNegocios([]);
-    setAuditorias({});
-    setGbp({});
 
     try {
       const res = await fetch(
@@ -93,16 +36,7 @@ export default function Home() {
 
       const resultado = data.negocios as NegocioBusqueda[];
       setNegocios(resultado);
-      setAuditorias(
-        Object.fromEntries(
-          resultado.map((n) => [
-            n.placeId,
-            n.websiteUri
-              ? { status: "cargando" as const }
-              : { status: "sin-web" as const },
-          ]),
-        ),
-      );
+      inicializarEstados(resultado);
 
       const conWeb = resultado.filter((n) => n.websiteUri);
       ejecutarConLimite(conWeb, LIMITE_AUDITORIAS_PARALELAS, auditarNegocio);

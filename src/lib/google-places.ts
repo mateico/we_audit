@@ -28,11 +28,8 @@ interface PlacesTextSearchResponse {
 
 export async function buscarNegocios(
   apiKey: string,
-  rubro: string,
-  zona: string,
+  textQuery: string,
 ): Promise<NegocioBusqueda[]> {
-  const textQuery = `${rubro} en ${zona}`;
-
   const res = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {
