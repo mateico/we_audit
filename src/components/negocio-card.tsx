@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Bloque1Tecnico, Bloque2Gbp, NegocioBusqueda } from "@/lib/types";
 import { Badge, Button, Card, ScoreGauge } from "./ui";
 
@@ -16,18 +16,53 @@ export type EstadoGbp =
   | { status: "listo"; data: Bloque2Gbp }
   | { status: "error"; mensaje: string };
 
+const PASOS_AUDITORIA = [
+  "Analizando SEO on-page…",
+  "Verificando datos de contacto (NAP)…",
+  "Midiendo velocidad de carga…",
+];
+
+function ProgresoAuditoria() {
+  const [paso, setPaso] = useState(0);
+  const total = PASOS_AUDITORIA.length;
+
+  useEffect(() => {
+    if (paso >= total - 1) return;
+    const id = setTimeout(() => setPaso((p) => p + 1), 1800);
+    return () => clearTimeout(id);
+  }, [paso, total]);
+
+  return (
+    <div className="flex w-32 flex-col items-center gap-1 text-xs text-muted">
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
+      <span className="text-center">{PASOS_AUDITORIA[paso]}</span>
+      <div className="h-1 w-full overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full bg-primary transition-all duration-500"
+          style={{ width: `${((paso + 1) / total) * 100}%` }}
+        />
+      </div>
+      <span>
+        {paso + 1}/{total}
+      </span>
+    </div>
+  );
+}
+
 export function NegocioCard({
   negocio,
   estado,
   estadoGbp,
   onReintentarAuditoria,
   onVerGbp,
+  mostrarGbp = true,
 }: {
   negocio: NegocioBusqueda;
   estado: EstadoAuditoria;
   estadoGbp: EstadoGbp;
   onReintentarAuditoria: (negocio: NegocioBusqueda) => void;
   onVerGbp: (negocio: NegocioBusqueda) => void;
+  mostrarGbp?: boolean;
 }) {
   const [detalleAbierto, setDetalleAbierto] = useState(false);
 
@@ -65,12 +100,7 @@ export function NegocioCard({
           <Badge tone="neutral">No auditable</Badge>
         )}
 
-        {estado.status === "cargando" && (
-          <div className="flex flex-col items-center gap-1 text-xs text-muted">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
-            Auditando sitio…
-          </div>
-        )}
+        {estado.status === "cargando" && <ProgresoAuditoria />}
 
         {estado.status === "error" && (
           <div className="flex flex-col items-center gap-1">
@@ -107,29 +137,35 @@ export function NegocioCard({
           <span className="text-muted">Sin rating en Google</span>
         )}
 
-        {estadoGbp.status === "listo" ? (
-          <div className="flex flex-col gap-0.5 text-xs text-muted">
-            <span>Categoría: {estadoGbp.data.categoria ?? "—"}</span>
-            <span>
-              Fotos: {estadoGbp.data.fotosCount}
-              {estadoGbp.data.fotosCount === 10 ? "+" : ""}
-            </span>
-            <span>
-              Website en GBP: {estadoGbp.data.tieneWebsite ? "Sí" : "No"}
-            </span>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            className="text-xs"
-            onClick={() => onVerGbp(negocio)}
-            disabled={estadoGbp.status === "cargando"}
-          >
-            {estadoGbp.status === "cargando" ? "Cargando…" : "Ver detalle GBP"}
-          </Button>
-        )}
-        {estadoGbp.status === "error" && (
-          <span className="text-xs text-red-600">{estadoGbp.mensaje}</span>
+        {mostrarGbp && (
+          <>
+            {estadoGbp.status === "listo" ? (
+              <div className="flex flex-col gap-0.5 text-xs text-muted">
+                <span>Categoría: {estadoGbp.data.categoria ?? "—"}</span>
+                <span>
+                  Fotos: {estadoGbp.data.fotosCount}
+                  {estadoGbp.data.fotosCount === 10 ? "+" : ""}
+                </span>
+                <span>
+                  Website en GBP: {estadoGbp.data.tieneWebsite ? "Sí" : "No"}
+                </span>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                className="text-xs"
+                onClick={() => onVerGbp(negocio)}
+                disabled={estadoGbp.status === "cargando"}
+              >
+                {estadoGbp.status === "cargando"
+                  ? "Cargando…"
+                  : "Ver detalle GBP"}
+              </Button>
+            )}
+            {estadoGbp.status === "error" && (
+              <span className="text-xs text-red-600">{estadoGbp.mensaje}</span>
+            )}
+          </>
         )}
       </div>
 
