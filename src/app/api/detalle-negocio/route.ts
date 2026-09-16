@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGoogleApiKey } from "@/lib/env";
 import { obtenerDetallesGbp } from "@/lib/google-places";
+import { aplicarLimite } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const limite = await aplicarLimite(req);
+  if (limite) return limite;
+
   const placeId = req.nextUrl.searchParams.get("placeId");
 
   if (!placeId) {
