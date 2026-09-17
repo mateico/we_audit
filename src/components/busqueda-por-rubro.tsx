@@ -53,7 +53,7 @@ export function BusquedaPorRubro() {
     <div className="flex flex-col gap-6">
       <form
         onSubmit={handleBuscar}
-        className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end"
+        className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-end sm:p-5"
       >
         <div className="flex flex-1 flex-col gap-1">
           <label className="text-sm font-medium text-foreground">Rubro</label>
@@ -61,7 +61,7 @@ export function BusquedaPorRubro() {
             value={rubro}
             onChange={(e) => setRubro(e.target.value)}
             placeholder="ej. panadería"
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -69,7 +69,7 @@ export function BusquedaPorRubro() {
           <select
             value={ciudad}
             onChange={(e) => setCiudad(e.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           >
             {CIUDADES.map((c) => (
               <option key={c} value={c}>
@@ -78,12 +78,18 @@ export function BusquedaPorRubro() {
             ))}
           </select>
         </div>
-        <Button type="submit" disabled={buscando || !rubro.trim()}>
+        <Button
+          type="submit"
+          disabled={buscando || !rubro.trim()}
+          className="w-full sm:w-auto"
+        >
           {buscando ? "Buscando…" : "Buscar negocios"}
         </Button>
       </form>
 
-      {errorBusqueda && <p className="text-sm text-red-600">{errorBusqueda}</p>}
+      {errorBusqueda && (
+        <p className="text-sm text-danger">{errorBusqueda}</p>
+      )}
 
       {negocios.length > 0 && (
         <p className="text-sm text-muted">

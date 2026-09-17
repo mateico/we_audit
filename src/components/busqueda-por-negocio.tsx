@@ -73,15 +73,16 @@ export function BusquedaPorNegocio() {
     <div className="flex flex-col gap-6">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4"
+        className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:p-5"
       >
         <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="radio"
               name="modo"
               checked={modo === "url"}
               onChange={() => setModo("url")}
+              className="accent-primary"
             />
             Por sitio web
           </label>
@@ -91,15 +92,16 @@ export function BusquedaPorNegocio() {
             onFocus={() => setModo("url")}
             placeholder="URL del sitio web"
             disabled={modo !== "url"}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
           />
 
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="radio"
               name="modo"
               checked={modo === "nombre"}
               onChange={() => setModo("nombre")}
+              className="accent-primary"
             />
             Por nombre y ciudad
           </label>
@@ -110,14 +112,14 @@ export function BusquedaPorNegocio() {
               onFocus={() => setModo("nombre")}
               placeholder="Nombre del negocio"
               disabled={modo !== "nombre"}
-              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
             />
             <select
               value={ciudad}
               onChange={(e) => setCiudad(e.target.value)}
               onFocus={() => setModo("nombre")}
               disabled={modo !== "nombre"}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
             >
               {CIUDADES.map((c) => (
                 <option key={c} value={c}>
@@ -131,7 +133,7 @@ export function BusquedaPorNegocio() {
               onFocus={() => setModo("nombre")}
               placeholder="Dirección (opcional)"
               disabled={modo !== "nombre"}
-              className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
             />
           </div>
         </div>
@@ -148,7 +150,9 @@ export function BusquedaPorNegocio() {
         </Button>
       </form>
 
-      {errorBusqueda && <p className="text-sm text-red-600">{errorBusqueda}</p>}
+      {errorBusqueda && (
+        <p className="text-sm text-danger">{errorBusqueda}</p>
+      )}
 
       {seleccionado && (
         <div className="flex flex-col gap-2">
@@ -199,11 +203,17 @@ export function BusquedaPorNegocio() {
                 </div>
               </div>
               {c.websiteUri ? (
-                <Button variant="secondary" onClick={() => elegir(c)}>
+                <Button
+                  variant="outline"
+                  className="self-start sm:self-auto"
+                  onClick={() => elegir(c)}
+                >
                   Auditar
                 </Button>
               ) : (
-                <Badge tone="warn">Sin sitio web</Badge>
+                <Badge tone="warn" className="self-start sm:self-auto">
+                  Sin sitio web
+                </Badge>
               )}
             </Card>
           ))}

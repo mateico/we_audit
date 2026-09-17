@@ -1,32 +1,53 @@
 @import "tailwindcss";
 
+/*
+ * Design system: neutral by default, color only carries meaning.
+ * - primary (blue) is the single accent: focus, active nav, primary CTA, links.
+ * - success/warning/danger are reserved for status signals (scores, alerts) —
+ *   never used decoratively.
+ * - everything else (cards, borders, body text) stays grayscale.
+ */
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
-  --border: #e2e8f0;
+  --surface-muted: #f5f8fb;
+  --border: #eef1f6;
   --muted: #64748b;
+  --subtle: #94a3b8;
 
-  --primary: #4f46e5;
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #f59e0b;
-  --secondary-foreground: #1c1917;
 
-  --score-good: #16a34a;
-  --score-mid: #d97706;
-  --score-bad: #dc2626;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+
+  --content-max: 1200px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);
   --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

@@ -1,19 +1,31 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
+export function Container({
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={`mx-auto w-full max-w-[1200px] px-4 sm:px-6 ${className}`}
+      {...props}
+    />
+  );
+}
+
 export function Button({
   variant = "primary",
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "outline" | "ghost";
 }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
   const variants: Record<string, string> = {
-    primary: "bg-primary text-primary-foreground hover:opacity-90",
-    secondary: "bg-secondary text-secondary-foreground hover:opacity-90",
-    ghost:
-      "bg-transparent border border-border text-foreground hover:bg-black/5",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+    outline:
+      "border border-border bg-card text-foreground hover:bg-surface-muted",
+    ghost: "bg-transparent text-foreground hover:bg-surface-muted",
   };
   return (
     <button
@@ -26,19 +38,21 @@ export function Button({
 export function Badge({
   children,
   tone = "neutral",
+  className = "",
 }: {
   children: ReactNode;
   tone?: "neutral" | "good" | "bad" | "warn";
+  className?: string;
 }) {
   const tones: Record<string, string> = {
-    neutral: "bg-black/5 text-foreground",
-    good: "bg-green-100 text-green-700",
-    bad: "bg-red-100 text-red-700",
-    warn: "bg-amber-100 text-amber-700",
+    neutral: "bg-surface-muted text-muted",
+    good: "bg-success-bg text-success",
+    bad: "bg-danger-bg text-danger",
+    warn: "bg-warning-bg text-warning",
   };
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]} ${className}`}
     >
       {children}
     </span>
@@ -51,26 +65,27 @@ export function Card({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-xl border border-border bg-card p-4 shadow-sm ${className}`}
+      className={`rounded-lg border border-border bg-card p-4 sm:p-5 ${className}`}
       {...props}
     />
   );
 }
 
 function bandaScore(score: number) {
-  if (score >= 75) return { color: "var(--score-good)", etiqueta: "Muy bueno" };
-  if (score >= 50) return { color: "var(--score-mid)", etiqueta: "Regular" };
-  return { color: "var(--score-bad)", etiqueta: "Bajo" };
+  if (score >= 75)
+    return { color: "var(--success)", etiqueta: "Muy bueno" };
+  if (score >= 50) return { color: "var(--warning)", etiqueta: "Regular" };
+  return { color: "var(--danger)", etiqueta: "Bajo" };
 }
 
 export function ScoreGauge({
   score,
-  size = 88,
+  size = 96,
 }: {
   score: number;
   size?: number;
 }) {
-  const r = size / 2 - 8;
+  const r = size / 2 - 9;
   const cx = size / 2;
   const cy = size / 2;
   const { color, etiqueta } = bandaScore(score);
@@ -102,10 +117,10 @@ export function ScoreGauge({
           strokeLinecap="round"
         />
       </svg>
-      <span className="text-lg font-bold" style={{ color }}>
+      <span className="text-xl font-bold" style={{ color }}>
         {score}
       </span>
-      <span className="text-xs text-muted">{etiqueta}</span>
+      <span className="text-xs font-medium text-muted">{etiqueta}</span>
     </div>
   );
 }

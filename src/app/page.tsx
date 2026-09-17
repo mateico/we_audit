@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BusquedaPorNegocio } from "@/components/busqueda-por-negocio";
 import { BusquedaPorRubro } from "@/components/busqueda-por-rubro";
+import { Container } from "@/components/ui";
 
 const TABS = [
   { id: "negocio", label: "Por negocio" },
@@ -16,26 +17,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-border bg-foreground px-6 py-4">
-        <h1 className="text-lg font-semibold text-background">we-audit</h1>
-        <nav className="flex gap-4">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`text-sm font-medium transition-colors ${
-                tab === t.id
-                  ? "text-background underline underline-offset-4"
-                  : "text-background/60 hover:text-background"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+      <header className="border-b border-border bg-card">
+        <Container className="flex items-center justify-between gap-4">
+          <h1 className="text-base font-semibold text-foreground">
+            we check it
+          </h1>
+          <nav className="-mb-px flex gap-5">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`whitespace-nowrap border-b-2 py-4 text-sm font-medium transition-colors ${
+                  tab === t.id
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+        </Container>
       </header>
 
-      <main className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8">
+      <Container className="flex flex-col gap-6 py-6 sm:py-8">
         <div hidden={tab !== "negocio"}>
           <BusquedaPorNegocio />
         </div>
@@ -43,7 +48,7 @@ export default function Home() {
         <div hidden={tab !== "rubro"}>
           <BusquedaPorRubro />
         </div>
-      </main>
+      </Container>
     </div>
   );
 }
