@@ -33,7 +33,9 @@ function extraerHeadings($: cheerio.CheerioAPI) {
     const els = $(tag);
     headingsCount[tag] = els.length;
     if (tag === "h1") {
-      els.each((_, el) => h1.push($(el).text().trim()));
+      els.each((_, el) => {
+        h1.push($(el).text().trim());
+      });
     }
   }
   return { h1, headingsCount };

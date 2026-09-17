@@ -57,7 +57,11 @@ export function BusquedaPorNegocio() {
       const params = new URLSearchParams({ nombre, ciudad });
       if (direccion.trim()) params.set("direccion", direccion.trim());
       const res = await fetch(`/api/buscar-negocio?${params.toString()}`);
-      const data = await res.json();
+      const data = await res.json<{
+        error?: string;
+        negocios?: NegocioBusqueda[];
+      }>();
+
       if (!res.ok) throw new Error(data.error ?? "Error buscando negocios.");
       setCandidatos(data.negocios as NegocioBusqueda[]);
     } catch (err) {
@@ -150,9 +154,7 @@ export function BusquedaPorNegocio() {
         </Button>
       </form>
 
-      {errorBusqueda && (
-        <p className="text-sm text-danger">{errorBusqueda}</p>
-      )}
+      {errorBusqueda && <p className="text-sm text-danger">{errorBusqueda}</p>}
 
       {seleccionado && (
         <div className="flex flex-col gap-2">

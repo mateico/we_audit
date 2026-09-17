@@ -31,7 +31,11 @@ export function BusquedaPorRubro() {
       const res = await fetch(
         `/api/search-negocios?rubro=${encodeURIComponent(rubro)}&zona=${encodeURIComponent(ciudad)}`,
       );
-      const data = await res.json();
+      const data = await res.json<{
+        error?: string;
+        negocios?: NegocioBusqueda[];
+      }>();
+
       if (!res.ok) throw new Error(data.error ?? "Error buscando negocios.");
 
       const resultado = data.negocios as NegocioBusqueda[];
@@ -87,9 +91,7 @@ export function BusquedaPorRubro() {
         </Button>
       </form>
 
-      {errorBusqueda && (
-        <p className="text-sm text-danger">{errorBusqueda}</p>
-      )}
+      {errorBusqueda && <p className="text-sm text-danger">{errorBusqueda}</p>}
 
       {negocios.length > 0 && (
         <p className="text-sm text-muted">

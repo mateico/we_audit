@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { NegocioBusqueda } from "@/lib/types";
+import type { Bloque1Tecnico, Bloque2Gbp, NegocioBusqueda } from "@/lib/types";
 import type { EstadoAuditoria, EstadoGbp } from "@/components/negocio-card";
 
 export function useAuditorias() {
@@ -33,8 +33,12 @@ export function useAuditorias() {
       const res = await fetch(
         `/api/auditar?url=${encodeURIComponent(negocio.websiteUri!)}`,
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error auditando el sitio.");
+      const data = await res.json<Bloque1Tecnico | { error: string }>();
+      if (!res.ok || "error" in data) {
+        throw new Error(
+          "error" in data ? data.error : "Error auditando el sitio.",
+        );
+      }
       setAuditorias((prev) => ({
         ...prev,
         [negocio.placeId]: { status: "listo", data },
@@ -56,9 +60,12 @@ export function useAuditorias() {
       const res = await fetch(
         `/api/detalle-negocio?placeId=${encodeURIComponent(negocio.placeId)}`,
       );
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.error ?? "Error obteniendo el detalle de GBP.");
+      const data = await res.json<Bloque2Gbp | { error: string }>();
+      if (!res.ok || "error" in data) {
+        throw new Error(
+          "error" in data ? data.error : "Error obteniendo el detalle de GBP.",
+        );
+      }
       setGbp((prev) => ({
         ...prev,
         [negocio.placeId]: { status: "listo", data },
