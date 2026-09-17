@@ -8,7 +8,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "we-audit",
+  "name": "we-check-it",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-31",
   "compatibility_flags": ["global_fetch_strictly_public"],
